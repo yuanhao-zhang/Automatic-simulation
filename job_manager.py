@@ -9,9 +9,9 @@ import sys
 sys.dont_write_bytecode = True
 
 def generate_parallel_slurm_script(lmp_path, input_file, output_filename, hours, run_dirs, cores):
-    # 脚本生成在当前根目录，而不是子目录
+
     with open(output_filename, 'w') as f:
-        # 头部信息（这部分保留你原来的写法，但确保 ntasks 设置为 96）
+
         f.write(f"#!/bin/bash\n")
         f.write(f"#SBATCH --nodes=1\n")
         f.write(f"#SBATCH --ntasks-per-node=96\n")
@@ -21,12 +21,12 @@ def generate_parallel_slurm_script(lmp_path, input_file, output_filename, hours,
         f.write("module load gcc/12.3.0\n")
         f.write("module load mvapich/4.1\n\n")
                 
-        # 核心改变：循环为每个文件夹生成一行并行的 srun 命令
+
         for r_dir in run_dirs:
-            # 使用 & 放入后台，--chdir 指定工作目录，--exclusive 隔离核心
+
             f.write(f"srun --ntasks={cores} --exclusive --chdir={r_dir} {lmp_path} -in {input_file} > {r_dir}/out.lmp &\n")
             f.write(f"python std_domainsize.py \n")
-        # 结尾必须加 wait，确保所有模拟跑完才结束 Job
+
         f.write("\nwait\n")
 
 
@@ -52,7 +52,7 @@ def run_simulation(output_filename, cluster, lmp_path, input_file, run_dir="."):
         os.chdir(original_dir)
 
 def main_multiple_runs(parameter_matrix,cores_per_job=96, start_run_number=None, 
-                      temperature=1.0, timestep=2000000, hours=5,
+                      temperature=1.0, timestep=200000, hours=3,
                       lmp_path="/users/PAA0027/yuanhaozhang/lammpstest/lammps_latest/lammps_src/build/lmp_mpi",
                       input_file="bcp.inp", output_filename="submit_job.sh",
                       cluster=True, domainsize=True):
